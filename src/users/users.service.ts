@@ -43,6 +43,19 @@ export class UsersService {
             }
         })
     }
+
+    async findOneByEmail(email:string){
+        return this.prisma.user.findUnique({
+            where:{email},
+            select:{
+                id:true,
+                email:true,
+                password:true,
+                createdAt:true
+            }
+        })
+    }
+
     async update(id:string,data:UpdateUserDto){
         const updatedData = {...data};
 

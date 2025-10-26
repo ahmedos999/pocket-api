@@ -10,6 +10,7 @@ import { DbService } from './db.service';
 import { RedisService } from './redis.service';
 import { PrismaService } from './prisma.service';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { UsersModule } from './users/users.module';
             : { target: 'pino-pretty', options: { singleLine: true, translateTime: 'SYS:standard' } },
       }
     }),
-    UsersModule
+    UsersModule,
+    AuthModule
   ],
   controllers: [AppController,HealthController,MathController],
   providers: [AppService,MathService,DbService,RedisService,PrismaService],
