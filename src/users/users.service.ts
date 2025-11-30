@@ -25,6 +25,7 @@ export class UsersService {
         return this.prisma.user.findMany({select:{
             id:true,
             email:true,
+            role:true,
             createdAt:true
         }});
     }
@@ -39,6 +40,7 @@ export class UsersService {
             select:{
                 id:true,
                 email:true,
+                role:true,
                 createdAt:true
             }
         })
@@ -50,6 +52,7 @@ export class UsersService {
             select:{
                 id:true,
                 email:true,
+                role:true,
                 password:true,
                 createdAt:true
             }

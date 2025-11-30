@@ -15,7 +15,6 @@ export class AuthService {
 
     async validateUser(email:string,password:string){
         const user = await this.userService.findOneByEmail(email);
-        console.log(user)
 
         if (!user) throw new UnauthorizedException('Invalid credentials')
 
@@ -29,13 +28,14 @@ export class AuthService {
     async login(email:string,password:string){
         const user = await this.validateUser(email,password)
 
-        const payload = {sub:user.id,email:user.email}
+        const payload = {sub:user.id,email:user.email,role:user.role}
         const token = this.jwtService.sign(payload)
 
         return {
             assess_token:token,
             user:{
                 id:user.id,
+                role:user.role,
                 email:user.email
             }
         }
