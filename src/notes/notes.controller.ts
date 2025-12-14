@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { CreateNoteDto } from './dto/create-note.dto';
@@ -6,6 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UpdateNoteDto } from './dto/update-note.dto';
+import { NoteQueryDto } from './dto/note-query.dto';
 
 @Controller('notes')
 export class NotesController {
@@ -19,8 +20,8 @@ export class NotesController {
     // Get my notes
     @UseGuards(AuthGuard('jwt'))
     @Get('me')
-    findMyNotes(@CurrentUser() user) {
-        return this.notesService.findAllForUser(user.id);
+    findMyNotes(@CurrentUser() user,@Query() query:NoteQueryDto) {
+        return this.notesService.findAllForUser(user.id,query);
     }
 
     // Admin: Get ALL notes

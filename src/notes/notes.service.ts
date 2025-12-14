@@ -2,10 +2,34 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
+import { NoteQueryDto } from './dto/note-query.dto';
 
 @Injectable()
 export class NotesService {
     constructor(private prisma:PrismaService){}
+
+      async findAllForUser(userId: string, query: NoteQueryDto) {
+      const { page = 1, limit = 10, search, sort = 'desc' } = query;
+
+      const skip = (page - 1) * limit;
+
+      return this.prisma.note.findMany({
+        where: {
+          userId,
+          ...(search && {
+            OR: [
+              { title: { contains: search, mode: 'insensitive' } },
+              { content: { contains: search, mode: 'insensitive' } },
+            ],
+          }),
+        },
+        orderBy: {
+          createdAt: sort,
+        },
+        skip,
+        take: limit,
+      });
+    }
 
     async create(userId:string, dto:CreateNoteDto){
         return this.prisma.note.create({
@@ -15,12 +39,6 @@ export class NotesService {
             }
         })
     }
-
-    async findAllForUser(userId: string) {
-    return this.prisma.note.findMany({
-      where: { userId },
-    });
-  }
   async findAllForAdmin(){
     return this.prisma.note.findMany();
   }
@@ -52,4 +70,5 @@ export class NotesService {
       where: { id },
     });
   }
+
 }
