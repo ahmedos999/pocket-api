@@ -9,26 +9,41 @@ export class NotesService {
     constructor(private prisma:PrismaService){}
 
       async findAllForUser(userId: string, query: NoteQueryDto) {
-      const { page = 1, limit = 10, search, sort = 'desc' } = query;
+      const { page = 1, limit = 10, search, sort = 'desc', includeDeleted = false } = query;
 
       const skip = (page - 1) * limit;
 
-      return this.prisma.note.findMany({
-        where: {
-          userId,
-          ...(search && {
-            OR: [
-              { title: { contains: search, mode: 'insensitive' } },
-              { content: { contains: search, mode: 'insensitive' } },
-            ],
-          }),
+      const where: any = {
+        userId,
+        ...(includeDeleted ? {} : { deletedAt: null }),
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { content: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+      };
+
+      const [items, total] = await this.prisma.$transaction([
+        this.prisma.note.findMany({
+          where,
+          orderBy: { createdAt: sort },
+          skip,
+          take: limit,
+        }),
+        this.prisma.note.count({ where }),
+      ]);
+
+      return {
+        data: items,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          includeDeleted,
         },
-        orderBy: {
-          createdAt: sort,
-        },
-        skip,
-        take: limit,
-      });
+      };
     }
 
     async create(userId:string, dto:CreateNoteDto){
@@ -70,5 +85,31 @@ export class NotesService {
       where: { id },
     });
   }
+
+  async softDelete(userId:string,id:string){
+    const notes = await this.prisma.note.findUnique({where:{id}})
+
+    if(!notes || notes.userId != userId){
+      throw new ForbiddenException('You cannot delete this note');
+    }
+
+    return this.prisma.note.update({
+      where:{id},
+      data:{deletedAt: new Date()}
+    })
+  }
+
+  async restore(userId: string, id: string) {
+  const note = await this.prisma.note.findUnique({ where: { id } });
+
+  if (!note || note.userId !== userId) {
+    throw new ForbiddenException('You cannot restore this note');
+  }
+
+  return this.prisma.note.update({
+    where: { id },
+    data: { deletedAt: null },
+  });
+}
 
 }

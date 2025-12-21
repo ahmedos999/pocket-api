@@ -30,5 +30,6 @@ model Note {
   user      User     @relation(fields: [userId], references: [id])
   userId    String
   createdAt DateTime @default(now())
+  deletedAt DateTime? 
   updatedAt DateTime @updatedAt
 }

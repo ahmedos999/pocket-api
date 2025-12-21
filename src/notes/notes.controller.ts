@@ -39,10 +39,16 @@ export class NotesController {
         return this.notesService.update(user.id, id, dto);
     }
 
-    // Delete my note
+
     @UseGuards(AuthGuard('jwt'))
     @Delete(':id')
     remove(@CurrentUser() user, @Param('id') id: string) {
-        return this.notesService.delete(user.id, id);
+    return this.notesService.softDelete(user.id, id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post(':id/restore')
+    restore(@CurrentUser() user, @Param('id') id: string) {
+    return this.notesService.restore(user.id, id);
     }
 }

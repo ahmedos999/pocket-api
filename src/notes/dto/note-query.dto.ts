@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, IsString, Min } from "class-validator";
+import { IsBoolean, IsInt, IsOptional, IsString, Min } from "class-validator";
 
 export class NoteQueryDto{
     @IsOptional()
@@ -22,4 +22,9 @@ export class NoteQueryDto{
     @IsOptional()
     @IsString()
     sort?: 'asc'| 'desc' = 'desc';
+
+    @IsOptional()
+    @Type(() => Boolean)
+    @IsBoolean()
+    includeDeleted?: boolean = false;
 }
