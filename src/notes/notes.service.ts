@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
@@ -111,5 +111,22 @@ export class NotesService {
     data: { deletedAt: null },
   });
 }
+
+async addAttachment(userId: string, noteId: string, file: Express.Multer.File) {
+    const note = await this.prisma.note.findUnique({ where: { id: noteId } });
+
+    if (!note) throw new NotFoundException('Note not found');
+    if (note.userId !== userId) throw new ForbiddenException('Not your note');
+
+    return this.prisma.attachment.create({
+      data: {
+        noteId,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        path: `/uploads/${file.filename}`,
+      },
+    });
+  }
 
 }

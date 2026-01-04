@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { CreateNoteDto } from './dto/create-note.dto';
@@ -7,6 +7,14 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { NoteQueryDto } from './dto/note-query.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+
+function fileName(req, file, cb) {
+  const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+  cb(null, unique + extname(file.originalname));
+}
 
 @Controller('notes')
 export class NotesController {
@@ -50,5 +58,23 @@ export class NotesController {
     @Post(':id/restore')
     restore(@CurrentUser() user, @Param('id') id: string) {
     return this.notesService.restore(user.id, id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Post(':id/attachments')
+    @UseInterceptors(
+        FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './uploads',
+            filename: fileName,
+        }),
+        }),
+    )
+    uploadAttachment(
+        @CurrentUser() user,
+        @Param('id') noteId: string,
+        @UploadedFile() file: Express.Multer.File,
+    ) {
+        return this.notesService.addAttachment(user.id, noteId, file);
     }
 }
