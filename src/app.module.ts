@@ -12,9 +12,19 @@ import { PrismaService } from './prisma.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { NotesModule } from './notes/notes.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers:[
+        {
+          ttl:60_000,
+          limit:120
+        }
+      ]
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     LoggerModule.forRoot({
       pinoHttp:{
@@ -30,7 +40,10 @@ import { NotesModule } from './notes/notes.module';
     NotesModule
   ],
   controllers: [AppController,HealthController,MathController],
-  providers: [AppService,MathService,DbService,RedisService,PrismaService],
+  providers: [AppService,MathService,DbService,RedisService,PrismaService,{
+    provide:APP_GUARD,
+    useClass:ThrottlerGuard
+  }],
   exports:[PrismaService]
 })
 export class AppModule {}
